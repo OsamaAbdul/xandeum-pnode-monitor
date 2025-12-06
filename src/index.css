@@ -1,0 +1,201 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@layer base {
+  :root {
+    /* Cyberpunk Theme - Default (Dark) */
+    --background: 0 0% 0%; /* Black */
+    --foreground: 142 71% 45%; /* Neon Green */
+
+    --card: 0 0% 5%; /* Very Dark Gray */
+    --card-foreground: 142 71% 45%;
+
+    --popover: 0 0% 5%;
+    --popover-foreground: 142 71% 45%;
+
+    --primary: 142 71% 45%; /* Neon Green */
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 142 71% 45%;
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 0 0% 10%;
+    --muted-foreground: 142 71% 45%;
+
+    --accent: 142 71% 45%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 142 71% 45%; /* Green Border */
+    --input: 142 71% 45%;
+    --ring: 142 71% 45%;
+
+    --radius: 0rem; /* Sharp edges */
+
+    --chart-1: 142 71% 45%;
+    --chart-2: 142 71% 35%;
+    --chart-3: 142 71% 25%;
+    --chart-4: 142 71% 15%;
+    --chart-5: 142 71% 10%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(142, 71%, 45%) 0%, hsl(142, 71%, 25%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(142, 71%, 35%) 0%, hsl(142, 71%, 15%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(0, 0%, 0%) 0%, hsl(0, 0%, 5%) 100%);
+    
+    --shadow-soft: 0 0 20px -4px hsl(142 71% 45% / 0.15);
+    --shadow-card: 0 0 10px hsl(142 71% 45% / 0.1);
+    --shadow-glow: 0 0 20px hsl(142 71% 45% / 0.3);
+
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 142 71% 45%;
+    --sidebar-primary: 142 71% 45%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 142 71% 45%;
+    --sidebar-border: 142 71% 45%;
+    --sidebar-ring: 142 71% 45%;
+  }
+
+  /* Force dark mode variables even without .dark class if needed, or just map them same */
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 142 71% 45%;
+
+    --card: 0 0% 5%;
+    --card-foreground: 142 71% 45%;
+
+    --popover: 0 0% 5%;
+    --popover-foreground: 142 71% 45%;
+
+    --primary: 142 71% 45%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 142 71% 45%;
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 0 0% 10%;
+    --muted-foreground: 142 71% 45%;
+
+    --accent: 142 71% 45%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 142 71% 45%;
+    --input: 142 71% 45%;
+    --ring: 142 71% 45%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(142, 71%, 45%) 0%, hsl(142, 71%, 25%) 100%);
+    --gradient-secondary: linear-gradient(135deg, hsl(142, 71%, 35%) 0%, hsl(142, 71%, 15%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(0, 0%, 0%) 0%, hsl(0, 0%, 5%) 100%);
+
+    --shadow-soft: 0 0 20px -4px hsl(142 71% 45% / 0.15);
+    --shadow-card: 0 0 10px hsl(142 71% 45% / 0.1);
+    --shadow-glow: 0 0 20px hsl(142 71% 45% / 0.3);
+
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 142 71% 45%;
+    --sidebar-primary: 142 71% 45%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 142 71% 45%;
+    --sidebar-border: 142 71% 45%;
+    --sidebar-ring: 142 71% 45%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+  }
+
+  .glass-strong {
+    @apply bg-card/95 backdrop-blur-2xl border border-border/60;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+
+  .text-gradient-secondary {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-secondary);
+  }
+
+  .glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .glow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 8s ease infinite;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes gradient {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-muted/50 rounded-full;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/30 transition-colors;
+}
+
+/* Table styles */
+.table-row-hover {
+  @apply transition-colors hover:bg-muted/50;
+}
+
+/* Mono font for data */
+.font-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
