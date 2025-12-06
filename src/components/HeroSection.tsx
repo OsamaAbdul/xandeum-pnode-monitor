@@ -1,7 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Zap, Globe, Shield, Terminal } from 'lucide-react';
 
-export function HeroSection() {
+interface HeroSectionProps {
+  onConfigClick?: () => void;
+}
+
+export function HeroSection({ onConfigClick }: HeroSectionProps) {
   return (
     <section className="relative overflow-hidden pt-32 pb-20 px-4 border-b border-primary/20">
       {/* Background decoration */}
@@ -36,19 +40,30 @@ export function HeroSection() {
 
           {/* Tagline */}
           <p className="text-lg sm:text-xl text-primary/60 mb-8 max-w-2xl mx-auto animate-fade-in font-mono" style={{ animationDelay: '200ms' }}>
-            > INITIALIZING SCALABLE STORAGE ANALYTICS...<br />
-            > MONITORING NETWORK HEALTH...<br />
-            > TRACKING DECENTRALIZED ECOSYSTEM...
+            {'>'} INITIALIZING SCALABLE STORAGE ANALYTICS...<br />
+            {'>'} MONITORING NETWORK HEALTH...<br />
+            {'>'} TRACKING DECENTRALIZED ECOSYSTEM...
           </p>
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-fade-in" style={{ animationDelay: '300ms' }}>
-            <Button size="lg" className="gap-2 bg-primary text-black hover:bg-primary/90 font-mono font-bold border border-primary">
+            <Button
+              size="lg"
+              className="gap-2 bg-primary text-black hover:bg-primary/90 font-mono font-bold border border-primary"
+              onClick={onConfigClick}
+            >
               <Terminal className="h-4 w-4" />
               INITIATE_SCAN
             </Button>
-            <Button size="lg" variant="outline" className="gap-2 border-primary/50 text-primary hover:bg-primary/10 font-mono">
-              READ_DOCS
+            <Button
+              size="lg"
+              variant="outline"
+              className="gap-2 border-primary/50 text-primary hover:bg-primary/10 font-mono"
+              asChild
+            >
+              <a href="https://github.com/OsamaAbdul/xandeum-pnode-monitor" target="_blank" rel="noopener noreferrer">
+                READ_DOCS
+              </a>
             </Button>
           </div>
 

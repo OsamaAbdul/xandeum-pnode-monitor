@@ -2,10 +2,18 @@ import { Sun, Moon, Github, ExternalLink, Menu, X, Terminal, ShieldCheck } from 
 import { Button } from '@/components/ui/button';
 import { useTheme } from '@/hooks/useTheme';
 import { useState } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 export function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const handleConnectWallet = () => {
+    toast({
+      title: 'COMING_SOON',
+      description: 'Wallet integration will be available soon.',
+    });
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-primary/20">
@@ -37,12 +45,17 @@ export function Navbar() {
               className="text-primary hover:text-primary hover:bg-primary/10 hidden sm:flex"
               asChild
             >
-              <a href="https://github.com/xandeum" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/OsamaAbdul/xandeum-pnode-monitor" target="_blank" rel="noopener noreferrer">
                 <Github className="h-5 w-5" />
               </a>
             </Button>
 
-            <Button variant="outline" size="sm" className="hidden sm:flex gap-2 border-primary/50 text-primary hover:bg-primary/10 hover:text-primary font-mono">
+            <Button
+              variant="outline"
+              size="sm"
+              className="hidden sm:flex gap-2 border-primary/50 text-primary hover:bg-primary/10 hover:text-primary font-mono"
+              onClick={handleConnectWallet}
+            >
               CONNECT_WALLET
               <ExternalLink className="h-4 w-4" />
             </Button>
@@ -69,7 +82,13 @@ export function Navbar() {
               <Button variant="ghost" className="justify-start font-mono text-primary hover:bg-primary/10 hover:text-primary">DASHBOARD</Button>
               <Button variant="ghost" className="justify-start font-mono text-primary hover:bg-primary/10 hover:text-primary">NETWORK</Button>
               <Button variant="ghost" className="justify-start font-mono text-primary hover:bg-primary/10 hover:text-primary">ANALYTICS</Button>
-              <Button variant="outline" className="mt-2 mx-4 border-primary/50 text-primary hover:bg-primary/10 font-mono">CONNECT_WALLET</Button>
+              <Button
+                variant="outline"
+                className="mt-2 mx-4 border-primary/50 text-primary hover:bg-primary/10 font-mono"
+                onClick={handleConnectWallet}
+              >
+                CONNECT_WALLET
+              </Button>
             </div>
           </div>
         )}

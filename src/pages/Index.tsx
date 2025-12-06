@@ -59,7 +59,7 @@ const Index = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <HeroSection />
+      <HeroSection onConfigClick={() => setConfigOpen(true)} />
 
       {/* Main Content */}
       <main className="container mx-auto px-4 pb-20 space-y-8">
@@ -163,10 +163,10 @@ const Index = () => {
             <PNodesTable data={pnodes} versions={versions} />
           )}
         </section>
-      </main>
+      </main >
 
       {/* Footer */}
-      <footer className="border-t bg-card/50">
+      < footer className="border-t bg-card/50" >
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -184,8 +184,8 @@ const Index = () => {
             </div>
           </div>
         </div>
-      </footer>
-    </div>
+      </footer >
+    </div >
   );
 };
 
