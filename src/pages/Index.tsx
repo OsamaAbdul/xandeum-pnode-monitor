@@ -174,7 +174,7 @@ const Index = () => {
                 <span className="text-primary-foreground font-bold text-sm">X</span>
               </div>
               <span className="text-sm text-muted-foreground">
-                © 2024 Xandeum. All rights reserved.
+                © {new Date().getFullYear()} Xandeum. All rights reserved.
               </span>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
