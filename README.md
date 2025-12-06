@@ -19,7 +19,7 @@ Follow these steps to get the project running locally.
 
 ```bash
 # Clone the repository
-git clone <YOUR_REPO_URL>
+git clone https://github.com/OsamaAbdul/xandeum-pnode-monitor.git
 cd xandeum-pnode-monitor
 
 # Install dependencies
