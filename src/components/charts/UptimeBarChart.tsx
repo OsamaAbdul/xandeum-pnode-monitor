@@ -42,10 +42,11 @@ export function UptimeBarChart({ data }: UptimeBarChartProps) {
                 border: '1px solid hsl(var(--primary))',
                 borderRadius: '0px',
                 fontFamily: 'JetBrains Mono, monospace',
-                color: 'hsl(var(--primary))',
+                color: '#FFFFFF',
               }}
               cursor={{ fill: 'hsl(var(--primary))', opacity: 0.1 }}
-              labelStyle={{ color: 'hsl(var(--primary))' }}
+              labelStyle={{ color: '#FFFFFF' }}
+              itemStyle={{ color: '#FFFFFF' }}
               formatter={(value: number, _, payload) => [
                 `${value} NODES`,
                 'COUNT'
