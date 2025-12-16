@@ -10,10 +10,18 @@ export interface PNodeInfo {
   podsCount: number;
   updatedAt: Date;
   status: 'online' | 'degraded' | 'offline';
+  country?: string;
+  city?: string;
+  rpcPort?: number;
+  storageCommitted?: number;
+  isPublic?: boolean;
+  lat?: number;
+  lon?: number;
 }
 
 export interface NetworkStats {
   totalPNodes: number;
+  activeNodes: number;
   avgUptime: number;
   totalStorage: string;
   totalStorageBytes: number;

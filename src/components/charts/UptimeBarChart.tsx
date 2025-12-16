@@ -24,14 +24,14 @@ export function UptimeBarChart({ data }: UptimeBarChartProps) {
           <BarChart data={data} layout="vertical" margin={{ left: 10, right: 20 }}>
             <XAxis
               type="number"
-              tick={{ fontSize: 12, fill: 'hsl(var(--primary))', fontFamily: 'JetBrains Mono' }}
-              axisLine={{ stroke: 'hsl(var(--primary))', opacity: 0.3 }}
+              tick={{ fontSize: 12, fill: '#cccccc', fontFamily: 'JetBrains Mono' }}
+              axisLine={{ stroke: '#555555', opacity: 0.5 }}
               tickLine={false}
             />
             <YAxis
               type="category"
               dataKey="range"
-              tick={{ fontSize: 12, fill: 'hsl(var(--primary))', fontFamily: 'JetBrains Mono' }}
+              tick={{ fontSize: 12, fill: '#cccccc', fontFamily: 'JetBrains Mono', fontWeight: 600 }}
               axisLine={false}
               tickLine={false}
               width={60}

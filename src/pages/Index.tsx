@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navbar } from '@/components/Navbar';
 import { HeroSection } from '@/components/HeroSection';
 import { StatsCards } from '@/components/StatsCards';
@@ -21,6 +21,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 
 import { JudgesGuide } from '@/components/JudgesGuide';
 
+import { NodesMap } from '@/components/NodesMap';
+
 const Index = () => {
   const {
     pnodes,
@@ -35,15 +37,26 @@ const Index = () => {
     refreshFromAPI,
   } = usePNodes();
 
-  const [bootstrapUrl, setBootstrapUrl] = useState('');
+  const DEFAULT_BOOTSTRAP_URL = 'http://192.190.136.28:6000/rpc';
+  const [bootstrapUrl, setBootstrapUrl] = useState(DEFAULT_BOOTSTRAP_URL);
   const [configOpen, setConfigOpen] = useState(false);
 
+  // Auto-refresh every 30 seconds (always on)
+  useEffect(() => {
+    const url = bootstrapUrl || DEFAULT_BOOTSTRAP_URL;
+
+    // Initial fetch
+    refreshFromAPI(url);
+
+    const interval = setInterval(() => {
+      refreshFromAPI(url);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [bootstrapUrl, refreshFromAPI]);
+
   const handleRefresh = () => {
-    if (bootstrapUrl) {
-      refreshFromAPI(bootstrapUrl);
-    } else {
-      refresh();
-    }
+    refreshFromAPI(bootstrapUrl || DEFAULT_BOOTSTRAP_URL);
   };
 
   const handleConfigSave = () => {
@@ -74,7 +87,13 @@ const Index = () => {
         {/* Stats Section */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold">Network Overview</h2>
+            <h2 className="text-2xl font-bold flex items-center gap-2">
+              Network Overview
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+              </span>
+            </h2>
             <div className="flex items-center gap-2">
               <Dialog open={configOpen} onOpenChange={setConfigOpen}>
                 <DialogTrigger asChild>
@@ -136,6 +155,12 @@ const Index = () => {
           ) : (
             <StatsCards stats={stats} />
           )}
+
+        </section>
+
+        {/* Global Distribution Map */}
+        <section className="space-y-4 animate-fade-in delay-100">
+          <NodesMap nodes={pnodes} />
         </section>
 
         {/* Charts Section */}

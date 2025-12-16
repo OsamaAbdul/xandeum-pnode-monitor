@@ -27,7 +27,7 @@ export function generateMockPNodes(count: number = 150): PNodeInfo[] {
     const storageBytes = Math.floor(Math.random() * 5e12) + 1e10;
     const uptime = Math.floor(Math.random() * 30) + 70;
     const status = uptime > 95 ? 'online' : uptime > 80 ? 'degraded' : 'offline';
-    
+
     return {
       id: `pnode-${i + 1}`,
       pubkey: generatePubkey(),
@@ -49,11 +49,14 @@ export function calculateNetworkStats(pnodes: PNodeInfo[]): NetworkStats {
   const avgUptime = pnodes.reduce((acc, p) => acc + p.uptime, 0) / pnodes.length;
   const activePods = pnodes.reduce((acc, p) => acc + p.podsCount, 0);
   const onlineCount = pnodes.filter(p => p.status === 'online').length;
-  const healthScore = Math.round((avgUptime / 100) * (onlineCount / pnodes.length) * 100);
+  const healthScore = pnodes.length > 0
+    ? Math.round((onlineCount / pnodes.length) * 100)
+    : 0;
 
   return {
     totalPNodes: pnodes.length,
-    avgUptime: Math.round(avgUptime * 10) / 10,
+    activeNodes: onlineCount,
+    avgUptime: pnodes.length > 0 ? Math.round((avgUptime * 10) / 10) : 0,
     totalStorage: formatStorage(totalStorage),
     totalStorageBytes: totalStorage,
     activePods,

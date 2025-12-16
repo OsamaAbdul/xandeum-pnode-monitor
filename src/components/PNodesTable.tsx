@@ -40,7 +40,7 @@ function shortenPubkey(pubkey: string): string {
 }
 
 export function PNodesTable({ data, versions }: PNodesTableProps) {
-  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'uptime', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'updatedAt', direction: 'desc' });
   const [filters, setFilters] = useState<FilterConfig>({
     search: '',
     version: null,
@@ -271,6 +271,14 @@ export function PNodesTable({ data, versions }: PNodesTableProps) {
                 </th>
                 <th className="text-left p-4 font-bold text-primary/80 uppercase tracking-wider">
                   <button
+                    onClick={() => handleSort('country')}
+                    className="flex items-center gap-1 hover:text-primary transition-colors"
+                  >
+                    COUNTRY <SortIcon column="country" />
+                  </button>
+                </th>
+                <th className="text-left p-4 font-bold text-primary/80 uppercase tracking-wider">
+                  <button
                     onClick={() => handleSort('version')}
                     className="flex items-center gap-1 hover:text-primary transition-colors"
                   >
@@ -295,10 +303,10 @@ export function PNodesTable({ data, versions }: PNodesTableProps) {
                 </th>
                 <th className="text-left p-4 font-bold text-primary/80 uppercase tracking-wider hidden sm:table-cell">
                   <button
-                    onClick={() => handleSort('podsCount')}
+                    onClick={() => handleSort('isPublic')}
                     className="flex items-center gap-1 hover:text-primary transition-colors"
                   >
-                    PODS <SortIcon column="podsCount" />
+                    TYPE <SortIcon column="isPublic" />
                   </button>
                 </th>
                 <th className="text-left p-4 font-bold text-primary/80 uppercase tracking-wider">STATUS</th>
@@ -351,6 +359,12 @@ export function PNodesTable({ data, versions }: PNodesTableProps) {
                     <td className="p-4 text-primary/70 hidden md:table-cell">
                       {pnode.ip}:6000
                     </td>
+                    <td className="p-4 hidden md:table-cell">
+                      <div className="flex flex-col">
+                        <span className="text-primary/90">{pnode.country}</span>
+                        <span className="text-xs text-primary/50">{pnode.city}</span>
+                      </div>
+                    </td>
                     <td className="p-4">
                       <span className="text-primary/90">
                         {pnode.version}
@@ -371,8 +385,17 @@ export function PNodesTable({ data, versions }: PNodesTableProps) {
                         <span className="text-xs font-medium w-12 text-primary/80">{pnode.uptime}%</span>
                       </div>
                     </td>
-                    <td className="p-4 text-primary/70 hidden lg:table-cell">{pnode.storageUsed}</td>
-                    <td className="p-4 text-primary/70 hidden sm:table-cell">{pnode.podsCount}</td>
+                    <td className="p-4 text-primary/70 hidden lg:table-cell">
+                      <div className="flex flex-col">
+                        <span className="text-xs">Used: {pnode.storageUsed}</span>
+                        {/* Calculate % if needed or just show committed */}
+                      </div>
+                    </td>
+                    <td className="p-4 text-primary/70 hidden sm:table-cell">
+                      <Badge variant="outline" className={cn("text-xs font-mono", pnode.isPublic ? "border-primary/30 text-primary" : "border-primary/10 text-primary/50")}>
+                        {pnode.isPublic ? "PUBLIC" : "PRIVATE"}
+                      </Badge>
+                    </td>
                     <td className="p-4"><StatusBadge status={pnode.status} /></td>
                     <td className="p-4 hidden xl:table-cell">
                       <div className="flex items-center gap-1.5 text-xs text-primary/50">

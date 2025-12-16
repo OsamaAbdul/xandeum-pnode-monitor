@@ -18,9 +18,23 @@ interface PRPCResponse {
 
 interface PodInfo {
   address: string;
-  version: string;
-  last_seen: string;
+  is_public: boolean;
   last_seen_timestamp: number;
+  pubkey: string;
+  rpc_port: number;
+  storage_committed: number;
+  storage_usage_percent: number;
+  storage_used: number;
+  uptime: number; // seconds
+  version: string;
+}
+
+interface GeoInfo {
+  query: string;
+  country: string;
+  city: string;
+  lat: number;
+  lon: number;
 }
 
 async function makeRPCCall(url: string, method: string, params: unknown[] = []): Promise<PRPCResponse> {
@@ -53,7 +67,7 @@ function extractIPAndPort(address: string): { ip: string; port: string } {
 function calculateStatus(lastSeenTimestamp: number): string {
   const now = Math.floor(Date.now() / 1000);
   const secondsAgo = now - lastSeenTimestamp;
-  
+
   // Online: seen within last 5 minutes
   if (secondsAgo < 300) return 'online';
   // Degraded: seen within last 30 minutes
@@ -62,20 +76,47 @@ function calculateStatus(lastSeenTimestamp: number): string {
   return 'offline';
 }
 
-function generatePubkey(address: string): string {
-  // Generate a deterministic pubkey from address for consistency
-  // In production, this should come from the actual node
-  const encoder = new TextEncoder();
-  const data = encoder.encode(address);
-  let hash = 0;
-  for (let i = 0; i < data.length; i++) {
-    hash = ((hash << 5) - hash) + data[i];
-    hash |= 0;
+async function fetchCountries(ips: string[]): Promise<Record<string, GeoInfo>> {
+  if (ips.length === 0) return {};
+
+  const uniqueIps = [...new Set(ips)];
+  const batches = [];
+  const batchSize = 100; // ip-api batch limit
+
+  for (let i = 0; i < uniqueIps.length; i += batchSize) {
+    batches.push(uniqueIps.slice(i, i + batchSize));
   }
-  return `pnode_${Math.abs(hash).toString(16).padStart(16, '0')}`;
+
+  const results: Record<string, GeoInfo> = {};
+
+  for (const batch of batches) {
+    try {
+      const response = await fetch('http://ip-api.com/batch', {
+        method: 'POST',
+        body: JSON.stringify(batch),
+      });
+      const data = await response.json();
+
+      data.forEach((item: any) => {
+        if (item.status === 'success') {
+          results[item.query] = {
+            query: item.query,
+            country: item.country,
+            city: item.city,
+            lat: item.lat,
+            lon: item.lon
+          };
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching geo data:', error);
+    }
+  }
+
+  return results;
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -83,7 +124,7 @@ serve(async (req) => {
 
   try {
     const { bootstrapUrl } = await req.json();
-    
+
     if (!bootstrapUrl) {
       return new Response(
         JSON.stringify({ error: 'Bootstrap URL is required' }),
@@ -93,14 +134,56 @@ serve(async (req) => {
 
     console.log(`Fetching pNodes from bootstrap: ${bootstrapUrl}`);
 
-    // Initialize Supabase client with service role for database writes
+    // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Fetch pods using the correct RPC method
-    const podsResponse = await makeRPCCall(bootstrapUrl, 'get-pods');
-    
+    // 1. Check Cache (DB Freshness)
+    // If the latest node update was less than 30 seconds ago, return cached data to save RPC/DB resources.
+    const { data: latestNode } = await supabase
+      .from('pnodes')
+      .select('updated_at')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    const CACHE_TTL_SECONDS = 60;
+    const now = Date.now();
+    const lastUpdate = latestNode?.updated_at ? new Date(latestNode.updated_at).getTime() : 0;
+
+    if (now - lastUpdate < CACHE_TTL_SECONDS * 1000) {
+      console.log('Returning cached data (freshness < 30s)');
+
+      const { data: cachedPnodes } = await supabase
+        .from('pnodes')
+        .select('*');
+
+      const { data: cachedStats } = await supabase
+        .from('network_stats')
+        .select('*')
+        .order('recorded_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (cachedPnodes && cachedPnodes.length > 0) {
+        return new Response(
+          JSON.stringify({
+            success: true,
+            pnodesCount: cachedPnodes.length,
+            totalInNetwork: cachedPnodes.length, // approximation for cache
+            networkStats: cachedStats || {},
+            pnodes: cachedPnodes,
+            cached: true
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    // 2. Fetch from RPC (Cache Stale or Empty)
+    const podsResponse = await makeRPCCall(bootstrapUrl, 'get-pods-with-stats');
+
     if (podsResponse.error) {
       console.error('Failed to get pods:', podsResponse.error);
       return new Response(
@@ -111,7 +194,7 @@ serve(async (req) => {
 
     const pods = podsResponse.result?.pods || [];
     const totalCount = podsResponse.result?.total_count || pods.length;
-    
+
     console.log(`Found ${pods.length} pods in network (total: ${totalCount})`);
 
     if (pods.length === 0) {
@@ -121,65 +204,133 @@ serve(async (req) => {
       );
     }
 
+    // Extract IPs for geo lookup
+    const ips = pods.map(pod => extractIPAndPort(pod.address).ip);
+    const geoData = await fetchCountries(ips);
+
     // Transform pod data to pnode format
     const pnodesData = pods.map((pod: PodInfo) => {
       const { ip, port } = extractIPAndPort(pod.address);
       const status = calculateStatus(pod.last_seen_timestamp);
-      
-      // Calculate uptime based on status (approximation)
-      let uptime = 0;
-      if (status === 'online') uptime = 99;
-      else if (status === 'degraded') uptime = 85;
-      
+
+      // Calculate availability score
+      let uptimeScore = 0;
+      if (status === 'online') uptimeScore = 99.9;
+      else if (status === 'degraded') uptimeScore = 75.0;
+
+      const geo = geoData[ip] || { country: 'Unknown', city: 'Unknown', lat: 0, lon: 0 };
+
       return {
-        pubkey: generatePubkey(pod.address),
+        pubkey: pod.pubkey,
         ip,
         gossip: pod.address,
         version: pod.version,
-        uptime,
-        storage_used_bytes: 0, // Not provided by API
-        pods_count: 0, // Not provided by API
+        uptime: uptimeScore,
+        storage_used_bytes: pod.storage_used,
+        pods_count: 0,
         status,
         updated_at: new Date(pod.last_seen_timestamp * 1000).toISOString(),
+
+        // New fields
+        country: geo.country,
+        city: geo.city,
+        rpc_port: pod.rpc_port,
+        storage_committed: pod.storage_committed,
+        is_public: pod.is_public,
+        lat: geo.lat,
+        lon: geo.lon
       };
     });
 
-    console.log(`Processed ${pnodesData.length} pNodes`);
+    console.log(`Processed ${pnodesData.length} pNodes with geo data`);
+
+    // Filter out invalid nodes and deduplicate
+    const mobileMap = new Map();
+    const validNodes = pnodesData.filter(p => {
+      if (!p.pubkey) {
+        console.warn('Dropping node with missing pubkey:', p);
+        return false;
+      }
+      if (!p.ip) {
+        console.warn('Dropping node with missing IP:', p.pubkey);
+        return false;
+      }
+      return true;
+    });
+
+    validNodes.forEach(p => mobileMap.set(p.pubkey, p));
+    const uniquePnodesData = Array.from(mobileMap.values());
+
+    console.log(`Prepared ${uniquePnodesData.length} unique, valid pNodes for upsert (from ${pnodesData.length} raw)`);
+
+    // Calculate network stats
+    const onlineCount = uniquePnodesData.filter(p => p.status === 'online').length;
+    const degradedCount = uniquePnodesData.filter(p => p.status === 'degraded').length;
+    const avgUptime = uniquePnodesData.reduce((acc, p) => acc + p.uptime, 0) / (uniquePnodesData.length || 1);
+    const totalStorage = uniquePnodesData.reduce((acc, p) => acc + (p.storage_committed || 0), 0);
+    const healthScore = uniquePnodesData.length > 0 ? Math.round((onlineCount / uniquePnodesData.length) * 100) : 0;
+
+    const liveStats = {
+      total_pnodes: totalCount,
+      active_nodes: onlineCount,
+      avg_uptime: Math.round(avgUptime * 10) / 10,
+      total_storage_bytes: totalStorage,
+      active_pods: onlineCount + degradedCount,
+      health_score: healthScore,
+    };
+
+    if (uniquePnodesData.length === 0) {
+      console.log('No valid nodes to upsert');
+      return new Response(
+        JSON.stringify({
+          success: true,
+          pnodesCount: 0,
+          totalInNetwork: totalCount,
+          networkStats: liveStats,
+          pnodes: [],
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Upsert pNodes data to database
     const { error: upsertError } = await supabase
       .from('pnodes')
-      .upsert(pnodesData, { onConflict: 'pubkey' });
+      .upsert(uniquePnodesData, { onConflict: 'pubkey' });
 
     if (upsertError) {
       console.error('Failed to upsert pNodes:', upsertError);
     } else {
       console.log(`Successfully cached ${pnodesData.length} pNodes`);
+
+      // Cleanup stale nodes
+      const currentPubkeys = pnodesData.map(p => p.pubkey);
+      let deleteQuery = supabase.from('pnodes').delete();
+
+      if (currentPubkeys.length > 0) {
+        deleteQuery = deleteQuery.not('pubkey', 'in', `(${currentPubkeys.join(',')})`);
+      }
+
+      const { error: deleteError, count: deletedCount } = await deleteQuery;
+
+      if (deleteError) {
+        console.error('Failed to clean up stale pNodes:', deleteError);
+      } else {
+        if (deletedCount) console.log(`Cleaned up ${deletedCount} stale pNodes`);
+      }
+
+      // Store stats only if upsert succeeded
+      await supabase.from('network_stats').insert(liveStats);
     }
-
-    // Calculate and store network stats
-    const onlineCount = pnodesData.filter(p => p.status === 'online').length;
-    const degradedCount = pnodesData.filter(p => p.status === 'degraded').length;
-    const avgUptime = pnodesData.reduce((acc, p) => acc + p.uptime, 0) / pnodesData.length;
-    const healthScore = Math.round((onlineCount / pnodesData.length) * 100);
-
-    const networkStats = {
-      total_pnodes: totalCount,
-      avg_uptime: Math.round(avgUptime * 10) / 10,
-      total_storage_bytes: 0,
-      active_pods: onlineCount + degradedCount,
-      health_score: healthScore,
-    };
-
-    await supabase.from('network_stats').insert(networkStats);
-
+    // Return response with potential DB warnings
     return new Response(
       JSON.stringify({
         success: true,
-        pnodesCount: pnodesData.length,
+        pnodesCount: uniquePnodesData.length,
         totalInNetwork: totalCount,
-        networkStats,
-        pnodes: pnodesData,
+        networkStats: liveStats,
+        pnodes: uniquePnodesData,
+        dbError: upsertError ? upsertError.message : null,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
