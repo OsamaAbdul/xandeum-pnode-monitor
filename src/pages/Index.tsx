@@ -22,6 +22,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { JudgesGuide } from '@/components/JudgesGuide';
 
 import { NodesMap } from '@/components/NodesMap';
+import { Leaderboard } from '@/components/Leaderboard';
 
 const Index = () => {
   const {
@@ -171,6 +172,15 @@ const Index = () => {
           <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
             <UptimeBarChart data={uptimeBuckets} />
           </div>
+        </section>
+
+        {/* Leaderboard Section */}
+        <section className="space-y-4 animate-fade-in delay-200">
+          {isLoading ? (
+            <div className="rounded-xl border bg-card p-6 h-[400px] animate-pulse" />
+          ) : (
+            <Leaderboard pnodes={pnodes} />
+          )}
         </section>
 
         {/* Table Section */}

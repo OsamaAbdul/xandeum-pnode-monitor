@@ -4,6 +4,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useState } from 'react';
 import { toast } from '@/hooks/use-toast';
 
+
 export function Navbar() {
   const { theme, toggleTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
