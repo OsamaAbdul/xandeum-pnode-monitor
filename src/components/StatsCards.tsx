@@ -16,6 +16,7 @@ interface StatCardProps {
   trendUp?: boolean;
   delay?: number;
   accent?: 'primary' | 'secondary' | 'success' | 'warning';
+  disableCounter?: boolean;
 }
 
 function Counter({ value }: { value: number }) {
@@ -47,7 +48,7 @@ function Counter({ value }: { value: number }) {
   );
 }
 
-function StatCard({ title, value, icon, trend, trendUp, delay = 0, accent = 'primary' }: StatCardProps) {
+function StatCard({ title, value, icon, trend, trendUp, delay = 0, accent = 'primary', disableCounter = false }: StatCardProps) {
   // Check if value is purely numeric strings or numbers to animate
   const isNumeric = typeof value === 'number' || (typeof value === 'string' && /^\d+$/.test(value.replace(/,/g, '')));
   const numericValue = isNumeric
@@ -76,7 +77,9 @@ function StatCard({ title, value, icon, trend, trendUp, delay = 0, accent = 'pri
         <div className="space-y-1">
           <p className="text-xs text-primary/60 font-mono uppercase tracking-wider">{title}</p>
           <div className="text-2xl sm:text-3xl font-bold tracking-tight font-mono text-primary group-hover:text-primary/80 transition-colors">
-            {isSplitValue ? (
+            {disableCounter ? (
+              value
+            ) : isSplitValue ? (
               <>
                 <Counter value={splitVal1} /> / <Counter value={splitVal2} />
               </>
@@ -132,17 +135,13 @@ export function StatsCards({ stats }: StatsCardsProps) {
       />
       <StatCard
         title="TOTAL_STORAGE"
-        value={stats.totalStorage}
-        // Need to handle formatted storage strings carefully if strict number counting is desired, usually these are formatted (e.g. "2.4 PB"). Skipping complex parsing for now, assuming string display or basic number.
-        // Actually totalStorage is usually bytes number in `NetworkStats`? let's check types.
-        // In index.ts it was `total_storage_bytes`. In StatsCards props `stats` is likely transformed.
-        // If it's a formatted string like "500 GB", Counter won't work well.
-        // Let's assume for now keeping string if non-numeric.
+        value={`${stats.totalStorage} / ${stats.totalCapacity}`}
         icon={<HardDrive className="h-4 w-4" />}
         trend="> CAPACITY OK"
         trendUp={true}
         delay={100}
         accent="primary"
+        disableCounter={true}
       />
       <StatCard
         title="ACTIVE_NODES"

@@ -6,13 +6,8 @@ import {
   calculateNetworkStats,
   calculateVersionDistribution,
   calculateUptimeBuckets,
-} from '@/lib/mockData';
-
-function formatStorage(bytes: number): string {
-  if (bytes >= 1e12) return `${(bytes / 1e12).toFixed(2)} TB`;
-  if (bytes >= 1e9) return `${(bytes / 1e9).toFixed(2)} GB`;
-  return `${(bytes / 1e6).toFixed(2)} MB`;
-}
+  formatStorage
+} from '@/lib/utils';
 
 function mapDbToPNode(row: {
   id: string;
@@ -66,6 +61,8 @@ export function usePNodes() {
     avgUptime: 0,
     totalStorage: '0 MB',
     totalStorageBytes: 0,
+    totalCapacity: '0 MB',
+    totalCapacityBytes: 0,
     activePods: 0,
     healthScore: 0,
     lastUpdated: new Date(),

@@ -25,6 +25,8 @@ export interface NetworkStats {
   avgUptime: number;
   totalStorage: string;
   totalStorageBytes: number;
+  totalCapacity: string;
+  totalCapacityBytes: number;
   activePods: number;
   healthScore: number;
   lastUpdated: Date;
